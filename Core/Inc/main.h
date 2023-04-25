@@ -57,6 +57,24 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ERROR_LED_Pin GPIO_PIN_0
+#define ERROR_LED_GPIO_Port GPIOA
+#define SD_LED_Pin GPIO_PIN_5
+#define SD_LED_GPIO_Port GPIOC
+#define STATUS_LED_Pin GPIO_PIN_11
+#define STATUS_LED_GPIO_Port GPIOB
+#define DAC_LED_Pin GPIO_PIN_7
+#define DAC_LED_GPIO_Port GPIOC
+#define SPKR1_MIC2_RLY_Pin GPIO_PIN_4
+#define SPKR1_MIC2_RLY_GPIO_Port GPIOB
+#define SPKR1_DAC_RLY_Pin GPIO_PIN_6
+#define SPKR1_DAC_RLY_GPIO_Port GPIOB
+#define SPKR2_DAC_RLY_Pin GPIO_PIN_7
+#define SPKR2_DAC_RLY_GPIO_Port GPIOB
+#define SPKR2_JACK_RLY_Pin GPIO_PIN_8
+#define SPKR2_JACK_RLY_GPIO_Port GPIOB
+#define SPKR2_MIC1_RLY_Pin GPIO_PIN_9
+#define SPKR2_MIC1_RLY_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
