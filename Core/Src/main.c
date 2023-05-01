@@ -22,10 +22,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "wavPlayer.h"
-#include "sd.h"
 #include "string.h"
 #include "math.h"
+#include "sd.h"
+#include "wavPlayer.h"
+#include "volumeControl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,8 +52,12 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
 
 /* USER CODE BEGIN PV */
+MiniJackPlcSignal miniJackPlcSignal;
+Mic1State mic1State;
+
 extern WavPlayerState wavPlayerState;
 extern WavFileSelect wavFileSelect;
+extern MiniJackVolume miniJackVolume;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,11 +113,13 @@ int main(void)
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin | SPKR2_JACK_RLY_Pin, GPIO_PIN_SET);
+  RelaySPKR2(JACK);
+  RelaySPKR1(MIC2);
 
   //HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin, GPIO_PIN_SET);
   //DACConfigureI2SFormat(&hspi3);
   SDMount();
+  mic1State = MIC1_OFF;
   wavPlayerState = WAV_STATE_IDLE;
   //WAVPlayerFileSelect("001_start_22khz.wav");
   //WAVPlayerFileSelect("test22.wav");
@@ -195,6 +202,7 @@ int main(void)
   while (1)
   {
 	  WAVPlayerProcess(&hi2s2);
+	  MiniJackVolumeProcess();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -394,7 +402,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|GPIO_PIN_4, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|SPI3_CS3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|JACK_VOL_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin|SPI3_CS4_Pin, GPIO_PIN_SET);
@@ -424,6 +432,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : JACK_VOL_PLC_Pin MIC1_VOL_PLC_Pin MIC2_VOL_PLC_Pin */
+  GPIO_InitStruct.Pin = JACK_VOL_PLC_Pin|MIC1_VOL_PLC_Pin|MIC2_VOL_PLC_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pins : STATUS_LED_Pin SPKR1_MIC2_RLY_Pin SPKR1_DAC_RLY_Pin SPKR2_DAC_RLY_Pin
                            SPKR2_JACK_RLY_Pin SPKR2_MIC1_RLY_Pin */
   GPIO_InitStruct.Pin = STATUS_LED_Pin|SPKR1_MIC2_RLY_Pin|SPKR1_DAC_RLY_Pin|SPKR2_DAC_RLY_Pin
@@ -440,26 +454,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SPI3_CS4_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : WAV_ALARM_Pin WAV_FINISH_Pin WAV_START_Pin */
-  GPIO_InitStruct.Pin = WAV_ALARM_Pin|WAV_FINISH_Pin|WAV_START_Pin;
+  /*Configure GPIO pins : MIC1_SELECT_Pin WAV_ALARM_Pin WAV_FINISH_Pin WAV_START_Pin */
+  GPIO_InitStruct.Pin = MIC1_SELECT_Pin|WAV_ALARM_Pin|WAV_FINISH_Pin|WAV_START_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : SPI3_CS3_Pin */
-  GPIO_InitStruct.Pin = SPI3_CS3_Pin;
+  /*Configure GPIO pin : JACK_VOL_CS_Pin */
+  GPIO_InitStruct.Pin = JACK_VOL_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(SPI3_CS3_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(JACK_VOL_CS_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
@@ -491,6 +508,10 @@ void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	if (GPIO_Pin == JACK_VOL_PLC_Pin)
+	{
+		miniJackPlcSignal = JACK_VOLUME_PLC_ACTIVE;
+	}
 	if (GPIO_Pin == WAV_START_Pin)
 	{
 		wavFileSelect = WAV_FILE_START;
@@ -513,10 +534,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		//WAVPlayerPlay(&hi2s2);
 	}
 
-	// Free PLC IN pin
-	if (GPIO_Pin == GPIO_PIN_8)
+	// Turn on operator microphone
+	if (GPIO_Pin == MIC1_SELECT_Pin)
 	{
-
+		mic1State = MIC1_STARTUP;
 	}
 }
 

@@ -194,6 +194,8 @@ void WAVPlayerPlay(I2S_HandleTypeDef* i2s)
 		wavFileBytesReaded += br;
 
 		// Start circular DMA
+		RelaySPKR1(EXTERNAL_DAC);
+		RelaySPKR2(EXTERNAL_DAC);
 		HAL_I2S_Transmit_DMA(i2s, (uint16_t *)&audioBuffer, AUDIO_BUFFER_SIZE);
 		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
 	}
@@ -279,6 +281,8 @@ bool WAVPlayerStopAndCloseFile(void)
 		else
 		{
 			wavPlayerState = WAV_STATE_IDLE;
+			RelaySPKR1(MIC2);
+			RelaySPKR2(JACK);
 		}
 		return true;
 	}
@@ -287,6 +291,8 @@ bool WAVPlayerStopAndCloseFile(void)
 		HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
 		wavPlayerState = WAV_STATE_ERROR;
+		RelaySPKR1(MIC2);
+		RelaySPKR2(JACK);
 		return false;
 	}
 }

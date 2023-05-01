@@ -41,7 +41,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+extern MiniJackPlcSignal miniJackPlcSignal;
+extern MiniJackVolume miniJackVolume;
+extern Mic1State mic1State;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -51,8 +53,46 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint8_t FatFsCnt = 0;
+volatile uint8_t fatFsCounter = 0;
+volatile uint8_t volumeControlCounter = 0;
 volatile uint8_t Timer1, Timer2;
+volatile uint8_t miniJackVolumeTimer = 0;
+
+void Mic1_Handler(void)
+{
+	switch (mic1State)
+	{
+	case MIC1_STARTUP:
+		RelaySPKR2(MIC1);
+		mic1State = MIC1_ON;
+		break;
+
+	case MIC1_ON:
+		if (HAL_GPIO_ReadPin(MIC1_SELECT_GPIO_Port, MIC1_SELECT_Pin) == GPIO_PIN_SET)
+		{
+			RelaySPKR2(JACK);
+			mic1State = MIC1_OFF;
+		}
+		break;
+	}
+}
+
+void VolumeControl_Handler(void)
+{
+	if (miniJackPlcSignal == JACK_VOLUME_PLC_ACTIVE)
+	{
+		miniJackVolumeTimer++;
+		// If signal is ended - check duration and change volume
+		if (HAL_GPIO_ReadPin(JACK_VOL_PLC_GPIO_Port, JACK_VOL_PLC_Pin) != GPIO_PIN_RESET)
+		{
+			// Volume DOWN if signal < 500 ms
+			// Volume UP if signal > 500 ms
+			miniJackVolume = (miniJackVolumeTimer < 5) ? JACK_VOLUME_DOWN : JACK_VOLUME_UP;
+			miniJackVolumeTimer = 0;
+			miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
+		}
+	}
+}
 
 void SDTimer_Handler(void)
 {
@@ -194,11 +234,18 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-	FatFsCnt++;
-	if(FatFsCnt >= 10)
+	fatFsCounter++;
+	volumeControlCounter++;
+	if(fatFsCounter >= 10)
 	{
-		FatFsCnt = 0;
+		fatFsCounter = 0;
 		SDTimer_Handler();
+	}
+	if(volumeControlCounter >= 100)
+	{
+		volumeControlCounter = 0;
+		VolumeControl_Handler();
+		Mic1_Handler();
 	}
 
   /* USER CODE END SysTick_IRQn 0 */
@@ -214,6 +261,48 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles EXTI line0 interrupt.
+  */
+void EXTI0_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI0_IRQn 0 */
+
+  /* USER CODE END EXTI0_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(JACK_VOL_PLC_Pin);
+  /* USER CODE BEGIN EXTI0_IRQn 1 */
+
+  /* USER CODE END EXTI0_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line1 interrupt.
+  */
+void EXTI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI1_IRQn 0 */
+
+  /* USER CODE END EXTI1_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(MIC1_VOL_PLC_Pin);
+  /* USER CODE BEGIN EXTI1_IRQn 1 */
+
+  /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line2 interrupt.
+  */
+void EXTI2_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI2_IRQn 0 */
+
+  /* USER CODE END EXTI2_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(MIC2_VOL_PLC_Pin);
+  /* USER CODE BEGIN EXTI2_IRQn 1 */
+
+  /* USER CODE END EXTI2_IRQn 1 */
+}
 
 /**
   * @brief This function handles DMA1 channel5 global interrupt.
@@ -237,7 +326,7 @@ void EXTI9_5_IRQHandler(void)
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
+  HAL_GPIO_EXTI_IRQHandler(MIC1_SELECT_Pin);
   HAL_GPIO_EXTI_IRQHandler(WAV_ALARM_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 

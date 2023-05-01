@@ -31,6 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "volumeControl.h"
+#include "audioRelays.h"
 #include <stdbool.h>
 /* USER CODE END Includes */
 
@@ -61,12 +63,24 @@ void Error_Handler(void);
 #define ERROR_LED_GPIO_Port GPIOA
 #define SD_LED_Pin GPIO_PIN_5
 #define SD_LED_GPIO_Port GPIOC
+#define JACK_VOL_PLC_Pin GPIO_PIN_0
+#define JACK_VOL_PLC_GPIO_Port GPIOB
+#define JACK_VOL_PLC_EXTI_IRQn EXTI0_IRQn
+#define MIC1_VOL_PLC_Pin GPIO_PIN_1
+#define MIC1_VOL_PLC_GPIO_Port GPIOB
+#define MIC1_VOL_PLC_EXTI_IRQn EXTI1_IRQn
+#define MIC2_VOL_PLC_Pin GPIO_PIN_2
+#define MIC2_VOL_PLC_GPIO_Port GPIOB
+#define MIC2_VOL_PLC_EXTI_IRQn EXTI2_IRQn
 #define STATUS_LED_Pin GPIO_PIN_11
 #define STATUS_LED_GPIO_Port GPIOB
 #define SPI3_CS4_Pin GPIO_PIN_14
 #define SPI3_CS4_GPIO_Port GPIOB
 #define DAC_LED_Pin GPIO_PIN_7
 #define DAC_LED_GPIO_Port GPIOC
+#define MIC1_SELECT_Pin GPIO_PIN_8
+#define MIC1_SELECT_GPIO_Port GPIOA
+#define MIC1_SELECT_EXTI_IRQn EXTI9_5_IRQn
 #define WAV_ALARM_Pin GPIO_PIN_9
 #define WAV_ALARM_GPIO_Port GPIOA
 #define WAV_ALARM_EXTI_IRQn EXTI9_5_IRQn
@@ -76,8 +90,8 @@ void Error_Handler(void);
 #define WAV_START_Pin GPIO_PIN_11
 #define WAV_START_GPIO_Port GPIOA
 #define WAV_START_EXTI_IRQn EXTI15_10_IRQn
-#define SPI3_CS3_Pin GPIO_PIN_12
-#define SPI3_CS3_GPIO_Port GPIOC
+#define JACK_VOL_CS_Pin GPIO_PIN_12
+#define JACK_VOL_CS_GPIO_Port GPIOC
 #define SPKR1_MIC2_RLY_Pin GPIO_PIN_4
 #define SPKR1_MIC2_RLY_GPIO_Port GPIOB
 #define SPKR1_DAC_RLY_Pin GPIO_PIN_6
