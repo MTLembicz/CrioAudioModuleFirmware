@@ -74,6 +74,9 @@ void HAL_MspInit(void)
 
   /* USER CODE BEGIN MspInit 1 */
 
+  // Disable JTAG to use PB3, PB4 and PA15 as normal GPIO
+  __HAL_AFIO_REMAP_SWJ_NOJTAG();
+
   /* USER CODE END MspInit 1 */
 }
 

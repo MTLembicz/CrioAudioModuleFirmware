@@ -63,8 +63,8 @@ void Error_Handler(void);
 #define SD_LED_GPIO_Port GPIOC
 #define STATUS_LED_Pin GPIO_PIN_11
 #define STATUS_LED_GPIO_Port GPIOB
-#define SPI_CS4_Pin GPIO_PIN_14
-#define SPI_CS4_GPIO_Port GPIOB
+#define SPI3_CS4_Pin GPIO_PIN_14
+#define SPI3_CS4_GPIO_Port GPIOB
 #define DAC_LED_Pin GPIO_PIN_7
 #define DAC_LED_GPIO_Port GPIOC
 #define WAV_ALARM_Pin GPIO_PIN_9
@@ -76,6 +76,8 @@ void Error_Handler(void);
 #define WAV_START_Pin GPIO_PIN_11
 #define WAV_START_GPIO_Port GPIOA
 #define WAV_START_EXTI_IRQn EXTI15_10_IRQn
+#define SPI3_CS3_Pin GPIO_PIN_12
+#define SPI3_CS3_GPIO_Port GPIOC
 #define SPKR1_MIC2_RLY_Pin GPIO_PIN_4
 #define SPKR1_MIC2_RLY_GPIO_Port GPIOB
 #define SPKR1_DAC_RLY_Pin GPIO_PIN_6

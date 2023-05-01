@@ -108,7 +108,8 @@ int main(void)
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin | SPKR2_DAC_RLY_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin | SPKR2_JACK_RLY_Pin, GPIO_PIN_SET);
+
   //HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin, GPIO_PIN_SET);
   //DACConfigureI2SFormat(&hspi3);
   SDMount();
@@ -335,12 +336,12 @@ static void MX_SPI3_Init(void)
   /* SPI3 parameter configuration*/
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
-  hspi3.Init.Direction = SPI_DIRECTION_1LINE;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
   hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -381,10 +382,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 
-  // REMAP NJTRST pin to use PB4 as normal GPIO
-  __HAL_RCC_AFIO_CLK_ENABLE();
-  __HAL_AFIO_REMAP_SWJ_NONJTRST();
-
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
@@ -397,10 +394,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|GPIO_PIN_4, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|SPI3_CS3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin|SPI_CS4_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin|SPI3_CS4_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, SPKR1_MIC2_RLY_Pin|SPKR1_DAC_RLY_Pin|SPKR2_DAC_RLY_Pin|SPKR2_JACK_RLY_Pin
@@ -427,14 +424,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : STATUS_LED_Pin SPI_CS4_Pin SPKR1_MIC2_RLY_Pin SPKR1_DAC_RLY_Pin
-                           SPKR2_DAC_RLY_Pin SPKR2_JACK_RLY_Pin SPKR2_MIC1_RLY_Pin */
-  GPIO_InitStruct.Pin = STATUS_LED_Pin|SPI_CS4_Pin|SPKR1_MIC2_RLY_Pin|SPKR1_DAC_RLY_Pin
-                          |SPKR2_DAC_RLY_Pin|SPKR2_JACK_RLY_Pin|SPKR2_MIC1_RLY_Pin;
+  /*Configure GPIO pins : STATUS_LED_Pin SPKR1_MIC2_RLY_Pin SPKR1_DAC_RLY_Pin SPKR2_DAC_RLY_Pin
+                           SPKR2_JACK_RLY_Pin SPKR2_MIC1_RLY_Pin */
+  GPIO_InitStruct.Pin = STATUS_LED_Pin|SPKR1_MIC2_RLY_Pin|SPKR1_DAC_RLY_Pin|SPKR2_DAC_RLY_Pin
+                          |SPKR2_JACK_RLY_Pin|SPKR2_MIC1_RLY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI3_CS4_Pin */
+  GPIO_InitStruct.Pin = SPI3_CS4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SPI3_CS4_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
@@ -447,6 +451,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI3_CS3_Pin */
+  GPIO_InitStruct.Pin = SPI3_CS3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SPI3_CS3_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
@@ -501,9 +512,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		//WAVPlayerFileSelect("003_alarm_22khz.wav");
 		//WAVPlayerPlay(&hi2s2);
 	}
+
+	// Free PLC IN pin
 	if (GPIO_Pin == GPIO_PIN_8)
 	{
-		DACSetVolume(10);
+
 	}
 }
 

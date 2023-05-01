@@ -47,39 +47,42 @@ void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 	uint8_t sendData[2] = {dacRegisterAddress, dacRegisterData};
 
 	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_RESET);
 	if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 20) == HAL_OK)
 	{
 		HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
 	}
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
 }
 
+// TODO - function below don't work
 void DACSetVolume(uint16_t volume)
 {
 	uint8_t dacRegisterAddress = 0x10;
 	uint8_t dacRegisterData = 0x0;
 	uint8_t sendData[2] = {dacRegisterAddress, dacRegisterData};
 
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_RESET);
 	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_RESET);
 	if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, HAL_MAX_DELAY) == HAL_OK)
 	{
 		HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
 	}
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
 	//HAL_Delay(2);
+
 	dacRegisterAddress = 0x11;
 	dacRegisterData = 0x0;
 	sendData[0] = dacRegisterAddress;
 	sendData[1] = dacRegisterData;
+
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_RESET);
 	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_RESET);
 	if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, HAL_MAX_DELAY) == HAL_OK)
 	{
 		HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
 	}
-	HAL_GPIO_WritePin(GPIOB, SPI_CS4_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
 }
 
 bool SDMount(void)
