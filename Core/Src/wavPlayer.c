@@ -9,6 +9,7 @@
 #include <wavPlayer.h>
 #include "fatfs.h"
 #include <math.h>
+#include "audioRelays.h"
 
 FATFS fatFs;				// file system
 FIL wavFile, logFile;		// files
@@ -39,6 +40,7 @@ WavPlayerState wavPlayerState;
 WavFileSelect wavFileSelect;
 
 extern SPI_HandleTypeDef hspi3;
+extern Mic1State mic1State;
 
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 {
@@ -55,7 +57,7 @@ void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
 }
 
-// TODO - function below don't work
+// TODO - function doesn't work
 void DACSetVolume(uint16_t volume)
 {
 	uint8_t dacRegisterAddress = 0x10;
@@ -267,6 +269,13 @@ void WAVPlayerProcess(I2S_HandleTypeDef* i2s)
 	{
 		SDMount();
 	}
+
+	if (wavPlayerState == WAV_STATE_IDLE && mic1State == MIC1_OFF)
+	{
+		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
+		RelaySPKR1(MIC2);
+		RelaySPKR2(JACK);
+	}
 }
 
 bool WAVPlayerStopAndCloseFile(void)
@@ -281,8 +290,6 @@ bool WAVPlayerStopAndCloseFile(void)
 		else
 		{
 			wavPlayerState = WAV_STATE_IDLE;
-			RelaySPKR1(MIC2);
-			RelaySPKR2(JACK);
 		}
 		return true;
 	}

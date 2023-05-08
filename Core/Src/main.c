@@ -25,8 +25,9 @@
 #include "string.h"
 #include "math.h"
 #include "sd.h"
-#include "wavPlayer.h"
 #include "volumeControl.h"
+#include "audioRelays.h"
+#include "wavPlayer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,11 +54,15 @@ SPI_HandleTypeDef hspi3;
 
 /* USER CODE BEGIN PV */
 MiniJackPlcSignal miniJackPlcSignal;
+Mic1PlcSignal mic1PlcSignal;
+Mic2PlcSignal mic2PlcSignal;
 Mic1State mic1State;
 
 extern WavPlayerState wavPlayerState;
 extern WavFileSelect wavFileSelect;
 extern MiniJackVolume miniJackVolume;
+extern Mic1Volume mic1Volume;
+extern Mic2Volume mic2Volume;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,6 +117,15 @@ int main(void)
   MX_I2S2_Init();
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
+
+  miniJackVolume = JACK_VOLUME_INIT;
+  mic1Volume = MIC1_VOLUME_INIT;
+  mic2Volume = MIC2_VOLUME_INIT;
+
+  miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
+  mic1PlcSignal = MIC1_VOLUME_PLC_IDLE;
+  mic2PlcSignal = MIC2_VOLUME_PLC_IDLE;
+
 
   RelaySPKR2(JACK);
   RelaySPKR1(MIC2);
@@ -203,6 +217,8 @@ int main(void)
   {
 	  WAVPlayerProcess(&hi2s2);
 	  MiniJackVolumeProcess();
+	  Mic1VolumeProcess();
+	  Mic2VolumeProcess();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -402,7 +418,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|GPIO_PIN_4, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|JACK_VOL_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, JACK_VOL_INFO_Pin|MIC1_VOL_INFO_Pin|MIC2_VOL_INFO_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|MIC1_VOL_CS_Pin|MIC2_VOL_CS_Pin
+                          |JACK_VOL_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin|SPI3_CS4_Pin, GPIO_PIN_SET);
@@ -417,6 +437,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ERROR_LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : JACK_VOL_INFO_Pin MIC1_VOL_INFO_Pin MIC2_VOL_INFO_Pin */
+  GPIO_InitStruct.Pin = JACK_VOL_INFO_Pin|MIC1_VOL_INFO_Pin|MIC2_VOL_INFO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PA4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
@@ -460,12 +487,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : JACK_VOL_CS_Pin */
-  GPIO_InitStruct.Pin = JACK_VOL_CS_Pin;
+  /*Configure GPIO pin : VOL_CTRL_SELECT_Pin */
+  GPIO_InitStruct.Pin = VOL_CTRL_SELECT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(VOL_CTRL_SELECT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MIC1_VOL_CS_Pin MIC2_VOL_CS_Pin JACK_VOL_CS_Pin */
+  GPIO_InitStruct.Pin = MIC1_VOL_CS_Pin|MIC2_VOL_CS_Pin|JACK_VOL_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(JACK_VOL_CS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
@@ -492,17 +525,11 @@ static void MX_GPIO_Init(void)
 
 void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s)
 {
-	//bool bufferHalf = false;
-	//WAVPlayerFillBuffer(hi2s, bufferHalf);
-	//WAVPlayerFillBufferFull();
 	WAVPlayerBufferState(2);
 }
 
 void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
 {
-	//bool bufferHalf = true;
-	//WAVPlayerFillBuffer(hi2s, bufferHalf);
-	//WAVPlayerFillBufferHalf();
 	WAVPlayerBufferState(1);
 }
 
@@ -512,26 +539,28 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	{
 		miniJackPlcSignal = JACK_VOLUME_PLC_ACTIVE;
 	}
+	if (GPIO_Pin == MIC1_VOL_PLC_Pin)
+	{
+		mic1PlcSignal = MIC1_VOLUME_PLC_ACTIVE;
+	}
+	if (GPIO_Pin == MIC2_VOL_PLC_Pin)
+	{
+		mic2PlcSignal = MIC2_VOLUME_PLC_ACTIVE;
+	}
 	if (GPIO_Pin == WAV_START_Pin)
 	{
 		wavFileSelect = WAV_FILE_START;
 		wavPlayerState = WAV_STATE_START;
-		  //WAVPlayerFileSelect("001_start_22khz.wav");
-		  //WAVPlayerPlay(&hi2s2);
 	}
 	if (GPIO_Pin == WAV_FINISH_Pin)
 	{
 		wavFileSelect = WAV_FILE_FINISH;
 		wavPlayerState = WAV_STATE_START;
-		  //WAVPlayerFileSelect("002_finish_22khz.wav");
-		  //WAVPlayerPlay(&hi2s2);
 	}
 	if (GPIO_Pin == WAV_ALARM_Pin)
 	{
 		wavFileSelect = WAV_FILE_ALARM;
 		wavPlayerState = WAV_STATE_START;
-		//WAVPlayerFileSelect("003_alarm_22khz.wav");
-		//WAVPlayerPlay(&hi2s2);
 	}
 
 	// Turn on operator microphone

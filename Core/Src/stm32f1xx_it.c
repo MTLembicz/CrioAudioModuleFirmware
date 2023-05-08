@@ -22,6 +22,9 @@
 #include "stm32f1xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "volumeControl.h"
+#include "audioRelays.h"
+#include "wavPlayer.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,9 +44,19 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+extern WavFileSelect wavFileSelect;
+extern WavPlayerState wavPlayerState;
 extern MiniJackPlcSignal miniJackPlcSignal;
+extern Mic1PlcSignal mic1PlcSignal;
+extern Mic2PlcSignal mic2PlcSignal;
 extern MiniJackVolume miniJackVolume;
+extern Mic1Volume mic1Volume;
+extern Mic2Volume mic2Volume;
 extern Mic1State mic1State;
+
+extern uint8_t miniJackVolumeActual;
+extern uint8_t mic1VolumeActual;
+extern uint8_t mic2VolumeActual;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -54,9 +67,25 @@ extern Mic1State mic1State;
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 volatile uint8_t fatFsCounter = 0;
+volatile uint8_t mic1AndAlarmCounter = 0;
 volatile uint8_t volumeControlCounter = 0;
 volatile uint8_t Timer1, Timer2;
 volatile uint8_t miniJackVolumeTimer = 0;
+volatile uint8_t mic1VolumeTimer = 0;
+volatile uint8_t mic2VolumeTimer = 0;
+volatile uint16_t miniJackVolumeInfoTimer = 0;
+volatile uint16_t mic1VolumeInfoTimer = 0;
+volatile uint16_t mic2VolumeInfoTimer = 0;
+
+void PlayAlarm_Handler(void)
+{
+	if (wavFileSelect == WAV_FILE_ALARM && HAL_GPIO_ReadPin(WAV_ALARM_GPIO_Port, WAV_ALARM_Pin) == GPIO_PIN_SET)
+	{
+		// Change file and state to idle to stop playing alarm
+		wavFileSelect = WAV_FILE_START;
+		wavPlayerState = WAV_STATE_IDLE;
+	}
+}
 
 void Mic1_Handler(void)
 {
@@ -74,6 +103,9 @@ void Mic1_Handler(void)
 			mic1State = MIC1_OFF;
 		}
 		break;
+
+	case MIC1_OFF:
+		break;
 	}
 }
 
@@ -87,9 +119,35 @@ void VolumeControl_Handler(void)
 		{
 			// Volume DOWN if signal < 500 ms
 			// Volume UP if signal > 500 ms
-			miniJackVolume = (miniJackVolumeTimer < 5) ? JACK_VOLUME_DOWN : JACK_VOLUME_UP;
+			miniJackVolume = (miniJackVolumeTimer <= 5) ? JACK_VOLUME_DOWN : JACK_VOLUME_UP;
 			miniJackVolumeTimer = 0;
 			miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
+		}
+	}
+	if (mic1PlcSignal == MIC1_VOLUME_PLC_ACTIVE)
+	{
+		mic1VolumeTimer++;
+		// If signal is ended - check duration and change volume
+		if (HAL_GPIO_ReadPin(MIC1_VOL_PLC_GPIO_Port, MIC1_VOL_PLC_Pin) != GPIO_PIN_RESET)
+		{
+			// Volume DOWN if signal < 500 ms
+			// Volume UP if signal > 500 ms
+			mic1Volume = (mic1VolumeTimer <= 5) ? MIC1_VOLUME_DOWN : MIC1_VOLUME_UP;
+			mic1VolumeTimer = 0;
+			mic1PlcSignal = MIC1_VOLUME_PLC_IDLE;
+		}
+	}
+	if (mic2PlcSignal == MIC2_VOLUME_PLC_ACTIVE)
+	{
+		mic2VolumeTimer++;
+		// If signal is ended - check duration and change volume
+		if (HAL_GPIO_ReadPin(MIC2_VOL_PLC_GPIO_Port, MIC2_VOL_PLC_Pin) != GPIO_PIN_RESET)
+		{
+			// Volume DOWN if signal < 500 ms
+			// Volume UP if signal > 500 ms
+			mic2Volume = (mic2VolumeTimer <= 5) ? MIC2_VOLUME_DOWN : MIC2_VOLUME_UP;
+			mic2VolumeTimer = 0;
+			mic2PlcSignal = MIC2_VOLUME_PLC_IDLE;
 		}
 	}
 }
@@ -234,18 +292,62 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+
 	fatFsCounter++;
+	mic1AndAlarmCounter++;
 	volumeControlCounter++;
-	if(fatFsCounter >= 10)
+	miniJackVolumeInfoTimer++;
+	mic1VolumeInfoTimer++;
+	mic2VolumeInfoTimer++;
+
+	if (fatFsCounter >= 10)
 	{
 		fatFsCounter = 0;
 		SDTimer_Handler();
 	}
-	if(volumeControlCounter >= 100)
+	if (mic1AndAlarmCounter >= 50)
+	{
+		mic1AndAlarmCounter = 0;
+		Mic1_Handler();
+		PlayAlarm_Handler();
+	}
+	if (volumeControlCounter >= 100)
 	{
 		volumeControlCounter = 0;
 		VolumeControl_Handler();
-		Mic1_Handler();
+	}
+	uint8_t miniJackVolumeDiv = (miniJackVolumeActual == 0) ? 1 : miniJackVolumeActual;
+	if (miniJackVolumeInfoTimer >= 1000 / miniJackVolumeDiv)
+	{
+		HAL_GPIO_WritePin(JACK_VOL_INFO_GPIO_Port, JACK_VOL_INFO_Pin, GPIO_PIN_SET);
+		miniJackVolumeInfoTimer = 0;
+	}
+	if (miniJackVolumeInfoTimer >= 10)
+	{
+		HAL_GPIO_WritePin(JACK_VOL_INFO_GPIO_Port, JACK_VOL_INFO_Pin, GPIO_PIN_RESET);
+
+	}
+	uint8_t mic1VolumeDiv = (mic1VolumeActual == 0) ? 1 : mic1VolumeActual;
+	if (mic1VolumeInfoTimer >= 1000 / mic1VolumeDiv)
+	{
+		HAL_GPIO_WritePin(MIC1_VOL_INFO_GPIO_Port, MIC1_VOL_INFO_Pin, GPIO_PIN_SET);
+		mic1VolumeInfoTimer = 0;
+	}
+	if (mic1VolumeInfoTimer >= 10)
+	{
+		HAL_GPIO_WritePin(MIC1_VOL_INFO_GPIO_Port, MIC1_VOL_INFO_Pin, GPIO_PIN_RESET);
+
+	}
+	uint8_t mic2VolumeDiv = (mic2VolumeActual == 0) ? 1 : mic2VolumeActual;
+	if (mic2VolumeInfoTimer >= 1000 / mic2VolumeDiv)
+	{
+		HAL_GPIO_WritePin(MIC2_VOL_INFO_GPIO_Port, MIC2_VOL_INFO_Pin, GPIO_PIN_SET);
+		mic2VolumeInfoTimer = 0;
+	}
+	if (mic2VolumeInfoTimer >= 10)
+	{
+		HAL_GPIO_WritePin(MIC2_VOL_INFO_GPIO_Port, MIC2_VOL_INFO_Pin, GPIO_PIN_RESET);
+
 	}
 
   /* USER CODE END SysTick_IRQn 0 */

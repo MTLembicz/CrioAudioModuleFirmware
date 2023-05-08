@@ -16,6 +16,7 @@ typedef enum {
 	MIC1,
 	MIC2,
 	EXTERNAL_DAC,
+	NO_RELAY,
 }RelayInput;
 
 typedef enum {

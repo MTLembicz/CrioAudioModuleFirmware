@@ -31,8 +31,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "volumeControl.h"
-#include "audioRelays.h"
 #include <stdbool.h>
 /* USER CODE END Includes */
 
@@ -61,6 +59,12 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define ERROR_LED_Pin GPIO_PIN_0
 #define ERROR_LED_GPIO_Port GPIOA
+#define JACK_VOL_INFO_Pin GPIO_PIN_1
+#define JACK_VOL_INFO_GPIO_Port GPIOA
+#define MIC1_VOL_INFO_Pin GPIO_PIN_2
+#define MIC1_VOL_INFO_GPIO_Port GPIOA
+#define MIC2_VOL_INFO_Pin GPIO_PIN_3
+#define MIC2_VOL_INFO_GPIO_Port GPIOA
 #define SD_LED_Pin GPIO_PIN_5
 #define SD_LED_GPIO_Port GPIOC
 #define JACK_VOL_PLC_Pin GPIO_PIN_0
@@ -90,6 +94,12 @@ void Error_Handler(void);
 #define WAV_START_Pin GPIO_PIN_11
 #define WAV_START_GPIO_Port GPIOA
 #define WAV_START_EXTI_IRQn EXTI15_10_IRQn
+#define VOL_CTRL_SELECT_Pin GPIO_PIN_12
+#define VOL_CTRL_SELECT_GPIO_Port GPIOA
+#define MIC1_VOL_CS_Pin GPIO_PIN_10
+#define MIC1_VOL_CS_GPIO_Port GPIOC
+#define MIC2_VOL_CS_Pin GPIO_PIN_11
+#define MIC2_VOL_CS_GPIO_Port GPIOC
 #define JACK_VOL_CS_Pin GPIO_PIN_12
 #define JACK_VOL_CS_GPIO_Port GPIOC
 #define SPKR1_MIC2_RLY_Pin GPIO_PIN_4
