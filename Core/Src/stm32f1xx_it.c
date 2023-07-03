@@ -316,38 +316,47 @@ void SysTick_Handler(void)
 		volumeControlCounter = 0;
 		VolumeControl_Handler();
 	}
-	uint8_t miniJackVolumeDiv = (miniJackVolumeActual == 0) ? 1 : miniJackVolumeActual;
-	if (miniJackVolumeInfoTimer >= 1000 / miniJackVolumeDiv)
+
+	uint16_t miniJackVolumePulse = (miniJackVolumeActual == 0) ? 20 : miniJackVolumeActual * 20;
+	if (miniJackVolumeInfoTimer >= 0)
 	{
 		HAL_GPIO_WritePin(JACK_VOL_INFO_GPIO_Port, JACK_VOL_INFO_Pin, GPIO_PIN_SET);
-		miniJackVolumeInfoTimer = 0;
 	}
-	if (miniJackVolumeInfoTimer >= 10)
+	if (miniJackVolumeInfoTimer >= miniJackVolumePulse)
 	{
 		HAL_GPIO_WritePin(JACK_VOL_INFO_GPIO_Port, JACK_VOL_INFO_Pin, GPIO_PIN_RESET);
-
 	}
-	uint8_t mic1VolumeDiv = (mic1VolumeActual == 0) ? 1 : mic1VolumeActual;
-	if (mic1VolumeInfoTimer >= 1000 / mic1VolumeDiv)
+	if (miniJackVolumeInfoTimer >= 2 * miniJackVolumePulse)
+	{
+		miniJackVolumeInfoTimer = 0;
+	}
+
+	uint16_t mic1VolumePulse = (mic1VolumeActual == 0) ? 20 : mic1VolumeActual * 20;
+	if (mic1VolumeInfoTimer >= 0)
 	{
 		HAL_GPIO_WritePin(MIC1_VOL_INFO_GPIO_Port, MIC1_VOL_INFO_Pin, GPIO_PIN_SET);
-		mic1VolumeInfoTimer = 0;
 	}
-	if (mic1VolumeInfoTimer >= 10)
+	if (mic1VolumeInfoTimer >= mic1VolumePulse)
 	{
 		HAL_GPIO_WritePin(MIC1_VOL_INFO_GPIO_Port, MIC1_VOL_INFO_Pin, GPIO_PIN_RESET);
-
 	}
-	uint8_t mic2VolumeDiv = (mic2VolumeActual == 0) ? 1 : mic2VolumeActual;
-	if (mic2VolumeInfoTimer >= 1000 / mic2VolumeDiv)
+	if (mic1VolumeInfoTimer >= 2 * mic1VolumePulse)
+	{
+		mic1VolumeInfoTimer = 0;
+	}
+
+	uint16_t mic2VolumePulse = (mic2VolumeActual == 0) ? 20 : mic2VolumeActual * 20;
+	if (mic2VolumeInfoTimer >= 0)
 	{
 		HAL_GPIO_WritePin(MIC2_VOL_INFO_GPIO_Port, MIC2_VOL_INFO_Pin, GPIO_PIN_SET);
-		mic2VolumeInfoTimer = 0;
 	}
-	if (mic2VolumeInfoTimer >= 10)
+	if (mic2VolumeInfoTimer >= mic2VolumePulse)
 	{
 		HAL_GPIO_WritePin(MIC2_VOL_INFO_GPIO_Port, MIC2_VOL_INFO_Pin, GPIO_PIN_RESET);
-
+	}
+	if (mic2VolumeInfoTimer >= 2 * mic2VolumePulse)
+	{
+		mic2VolumeInfoTimer = 0;
 	}
 
   /* USER CODE END SysTick_IRQn 0 */
