@@ -118,8 +118,31 @@ void VolumeControl_Handler(void)
 		if (HAL_GPIO_ReadPin(JACK_VOL_PLC_GPIO_Port, JACK_VOL_PLC_Pin) != GPIO_PIN_RESET)
 		{
 			// Volume DOWN if signal < 500 ms
-			// Volume UP if signal > 500 ms
-			miniJackVolume = (miniJackVolumeTimer <= 5) ? JACK_VOLUME_DOWN : JACK_VOLUME_UP;
+			// Volume UP if 1000 ms > signal > 500 ms
+			// Volume ZERO if 1500 ms > signal > 1000 ms
+			// Volume MAX if signal > 1500 ms
+			if (miniJackVolumeTimer <= 5)
+			{
+				miniJackVolume = JACK_VOLUME_DOWN;
+			}
+			else
+			{
+				if (miniJackVolumeTimer <= 10)
+				{
+					miniJackVolume = JACK_VOLUME_UP;
+				}
+				else
+				{
+					if (miniJackVolumeTimer <= 15)
+					{
+						miniJackVolume = JACK_VOLUME_MIN;
+					}
+					else
+					{
+						miniJackVolume = JACK_VOLUME_MAX;
+					}
+				}
+			}
 			miniJackVolumeTimer = 0;
 			miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
 		}
@@ -132,7 +155,30 @@ void VolumeControl_Handler(void)
 		{
 			// Volume DOWN if signal < 500 ms
 			// Volume UP if signal > 500 ms
-			mic1Volume = (mic1VolumeTimer <= 5) ? MIC1_VOLUME_DOWN : MIC1_VOLUME_UP;
+			// Volume ZERO if 1500 ms > signal > 1000 ms
+			// Volume MAX if 2000 ms > signal > 1500 ms
+			if (mic1VolumeTimer <= 5)
+			{
+				mic1Volume = MIC1_VOLUME_DOWN;
+			}
+			else
+			{
+				if (mic1VolumeTimer <= 10)
+				{
+					mic1Volume = MIC1_VOLUME_UP;
+				}
+				else
+				{
+					if (mic1VolumeTimer <= 15)
+					{
+						mic1Volume = MIC1_VOLUME_MIN;
+					}
+					else
+					{
+						mic1Volume = MIC1_VOLUME_MAX;
+					}
+				}
+			}
 			mic1VolumeTimer = 0;
 			mic1PlcSignal = MIC1_VOLUME_PLC_IDLE;
 		}
@@ -145,7 +191,30 @@ void VolumeControl_Handler(void)
 		{
 			// Volume DOWN if signal < 500 ms
 			// Volume UP if signal > 500 ms
-			mic2Volume = (mic2VolumeTimer <= 5) ? MIC2_VOLUME_DOWN : MIC2_VOLUME_UP;
+			// Volume ZERO if 1500 ms > signal > 1000 ms
+			// Volume MAX if 2000 ms > signal > 1500 ms
+			if (mic2VolumeTimer <= 5)
+			{
+				mic2Volume = MIC2_VOLUME_DOWN;
+			}
+			else
+			{
+				if (mic2VolumeTimer <= 10)
+				{
+					mic2Volume = MIC2_VOLUME_UP;
+				}
+				else
+				{
+					if (mic2VolumeTimer <= 15)
+					{
+						mic2Volume = MIC2_VOLUME_MIN;
+					}
+					else
+					{
+						mic2Volume = MIC2_VOLUME_MAX;
+					}
+				}
+			}
 			mic2VolumeTimer = 0;
 			mic2PlcSignal = MIC2_VOLUME_PLC_IDLE;
 		}

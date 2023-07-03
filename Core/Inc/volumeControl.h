@@ -16,6 +16,8 @@ typedef enum {
 	JACK_VOLUME_IDLE,
 	JACK_VOLUME_UP,
 	JACK_VOLUME_DOWN,
+	JACK_VOLUME_MIN,
+	JACK_VOLUME_MAX,
 }MiniJackVolume;
 
 typedef enum {
@@ -23,6 +25,8 @@ typedef enum {
 	MIC1_VOLUME_IDLE,
 	MIC1_VOLUME_UP,
 	MIC1_VOLUME_DOWN,
+	MIC1_VOLUME_MIN,
+	MIC1_VOLUME_MAX,
 }Mic1Volume;
 
 typedef enum {
@@ -30,6 +34,8 @@ typedef enum {
 	MIC2_VOLUME_IDLE,
 	MIC2_VOLUME_UP,
 	MIC2_VOLUME_DOWN,
+	MIC2_VOLUME_MIN,
+	MIC2_VOLUME_MAX,
 }Mic2Volume;
 
 typedef enum {

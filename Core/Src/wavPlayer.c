@@ -10,6 +10,7 @@
 #include "fatfs.h"
 #include <math.h>
 #include "audioRelays.h"
+#include "volumeControl.h"
 
 FATFS fatFs;				// file system
 FIL wavFile, logFile;		// files
@@ -30,9 +31,6 @@ uint8_t dacRegisterData = 0;
 uint8_t bufferState = 0;
 uint32_t wavFileBytesReaded = 0;
 uint32_t wavFileSize = 0;
-
-
-//uint8_t audioBuffer[AUDIO_BUFFER_SIZE];
 int16_t audioBuffer[AUDIO_BUFFER_SIZE];
 
 struct WavFilesInfo wavFileInfo;
@@ -41,6 +39,7 @@ WavFileSelect wavFileSelect;
 
 extern SPI_HandleTypeDef hspi3;
 extern Mic1State mic1State;
+extern uint8_t miniJackVolumeActual;
 
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 {
@@ -274,7 +273,15 @@ void WAVPlayerProcess(I2S_HandleTypeDef* i2s)
 	{
 		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
 		RelaySPKR1(MIC2);
-		RelaySPKR2(JACK);
+		// Turn on JACK or NO_RELAY if mini-jack is muted
+		if (miniJackVolumeActual != 63)
+		{
+			RelaySPKR2(JACK);
+		}
+		else
+		{
+			RelaySPKR2(NO_RELAY);
+		}
 	}
 }
 
@@ -299,7 +306,15 @@ bool WAVPlayerStopAndCloseFile(void)
 		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
 		wavPlayerState = WAV_STATE_ERROR;
 		RelaySPKR1(MIC2);
-		RelaySPKR2(JACK);
+		// Turn on JACK or NO_RELAY if mini-jack is muted
+		if (miniJackVolumeActual != 63)
+		{
+			RelaySPKR2(JACK);
+		}
+		else
+		{
+			RelaySPKR2(NO_RELAY);
+		}
 		return false;
 	}
 }

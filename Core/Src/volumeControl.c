@@ -24,6 +24,7 @@ uint8_t mic2VolumeActual = 25;
 
 void MiniJackVolumeProcess(void)
 {
+	// Set mini-jack volume if potentiometer is active
 	if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) == GPIO_PIN_RESET)
 	{
 		uint32_t miniJackAdcVolume = 0;
@@ -56,6 +57,7 @@ void MiniJackVolumeProcess(void)
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
 		}
 	}
+	// Set mini-jack volume based on PLC signals
 	else
 	{
 		/*
@@ -93,7 +95,7 @@ void MiniJackVolumeProcess(void)
 			break;
 
 		case JACK_VOLUME_DOWN:
-			if (miniJackVolumeActual < 62)
+			if (miniJackVolumeActual < 63)
 			{
 				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 				miniJackVolumeActual++;
@@ -112,6 +114,52 @@ void MiniJackVolumeProcess(void)
 			{
 				miniJackVolume = JACK_VOLUME_IDLE;
 				RelaySPKR2(NO_RELAY);
+			}
+			break;
+
+		case JACK_VOLUME_MIN:
+			if (miniJackVolumeActual != 63)
+			{
+				RelaySPKR2(NO_RELAY);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				miniJackVolumeActual = 63;
+				uint8_t sendData[2] = {uPotRegisterAddress, miniJackVolumeActual};
+				HAL_GPIO_WritePin(JACK_VOL_CS_GPIO_Port, JACK_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					miniJackVolume = JACK_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(JACK_VOL_CS_GPIO_Port, JACK_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				miniJackVolume = JACK_VOLUME_IDLE;
+			}
+			break;
+
+		case JACK_VOLUME_MAX:
+			RelaySPKR2(JACK);
+			if (miniJackVolumeActual > 0)
+			{
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				miniJackVolumeActual = 0;
+				uint8_t sendData[2] = {uPotRegisterAddress, miniJackVolumeActual};
+				HAL_GPIO_WritePin(JACK_VOL_CS_GPIO_Port, JACK_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					miniJackVolume = JACK_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(JACK_VOL_CS_GPIO_Port, JACK_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				miniJackVolume = JACK_VOLUME_IDLE;
 			}
 			break;
 
@@ -141,6 +189,7 @@ void MiniJackVolumeProcess(void)
 
 void Mic1VolumeProcess(void)
 {
+	// Set mic1 volume if potentiometer is active
 	if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) == GPIO_PIN_RESET)
 	{
 		uint32_t mic1AdcVolume = 0;
@@ -173,6 +222,7 @@ void Mic1VolumeProcess(void)
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
 		}
 	}
+	// Set mic1 volume based on PLC signals
 	else
 	{
 		/*
@@ -209,10 +259,54 @@ void Mic1VolumeProcess(void)
 			break;
 
 		case MIC1_VOLUME_DOWN:
-			if (mic1VolumeActual < 62)
+			if (mic1VolumeActual < 63)
 			{
 				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 				mic1VolumeActual++;
+				uint8_t sendData[2] = {uPotRegisterAddress, mic1VolumeActual};
+				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					mic1Volume = MIC1_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				mic1Volume = MIC1_VOLUME_IDLE;
+			}
+			break;
+
+		case MIC1_VOLUME_MIN:
+			if (mic1VolumeActual != 63)
+			{
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				mic1VolumeActual = 63;
+				uint8_t sendData[2] = {uPotRegisterAddress, mic1VolumeActual};
+				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					mic1Volume = MIC1_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				mic1Volume = MIC1_VOLUME_IDLE;
+			}
+			break;
+
+		case MIC1_VOLUME_MAX:
+			if (mic1VolumeActual > 0)
+			{
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				mic1VolumeActual = 0;
 				uint8_t sendData[2] = {uPotRegisterAddress, mic1VolumeActual};
 				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_RESET);
 				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
@@ -256,6 +350,7 @@ void Mic1VolumeProcess(void)
 
 void Mic2VolumeProcess(void)
 {
+	// Set mic2 volume if potentiometer is active
 	if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) == GPIO_PIN_RESET)
 	{
 		uint32_t mic2AdcVolume = 0;
@@ -288,6 +383,7 @@ void Mic2VolumeProcess(void)
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
 		}
 	}
+	// Set mic2 volume based on PLC signals
 	else
 	{
 		/*
@@ -328,6 +424,50 @@ void Mic2VolumeProcess(void)
 			{
 				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 				mic2VolumeActual++;
+				uint8_t sendData[2] = {uPotRegisterAddress, mic2VolumeActual};
+				HAL_GPIO_WritePin(MIC2_VOL_CS_GPIO_Port, MIC2_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					mic2Volume = MIC2_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(MIC2_VOL_CS_GPIO_Port, MIC2_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				mic2Volume = MIC2_VOLUME_IDLE;
+			}
+			break;
+
+		case MIC2_VOLUME_MIN:
+			if (mic2VolumeActual != 63)
+			{
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				mic2VolumeActual = 63;
+				uint8_t sendData[2] = {uPotRegisterAddress, mic2VolumeActual};
+				HAL_GPIO_WritePin(MIC2_VOL_CS_GPIO_Port, MIC2_VOL_CS_Pin, GPIO_PIN_RESET);
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500) == HAL_OK)
+				{
+					mic2Volume = MIC2_VOLUME_IDLE;
+				}
+				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
+				HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			}
+			else
+			{
+				mic2Volume = MIC2_VOLUME_IDLE;
+			}
+			break;
+
+		case MIC2_VOLUME_MAX:
+			if (mic2VolumeActual > 0)
+			{
+				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
+				mic2VolumeActual = 0;
 				uint8_t sendData[2] = {uPotRegisterAddress, mic2VolumeActual};
 				HAL_GPIO_WritePin(MIC2_VOL_CS_GPIO_Port, MIC2_VOL_CS_Pin, GPIO_PIN_RESET);
 				while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
