@@ -57,16 +57,16 @@ SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi3;
 
 /* USER CODE BEGIN PV */
-MiniJackPlcSignal miniJackPlcSignal;
-Mic1PlcSignal mic1PlcSignal;
-Mic2PlcSignal mic2PlcSignal;
+VolumeControlPlcSignal miniJackPlcSignal;
+VolumeControlPlcSignal mic1PlcSignal;
+VolumeControlPlcSignal mic2PlcSignal;
 Mic1State mic1State;
 
 extern WavPlayerState wavPlayerState;
 extern WavFileSelect wavFileSelect;
-extern MiniJackVolume miniJackVolume;
-extern Mic1Volume mic1Volume;
-extern Mic2Volume mic2Volume;
+extern VolumeControlState miniJackVolumeState;
+extern VolumeControlState mic1VolumeState;
+extern VolumeControlState mic2VolumeState;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,13 +128,13 @@ int main(void)
   MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
 
-  miniJackVolume = JACK_VOLUME_INIT;
-  mic1Volume = MIC1_VOLUME_INIT;
-  mic2Volume = MIC2_VOLUME_INIT;
+  miniJackVolumeState = VOLUME_INIT;
+  mic1VolumeState = VOLUME_INIT;
+  mic2VolumeState = VOLUME_INIT;
 
-  miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
-  mic1PlcSignal = MIC1_VOLUME_PLC_IDLE;
-  mic2PlcSignal = MIC2_VOLUME_PLC_IDLE;
+  miniJackPlcSignal = VOLUME_PLC_IDLE;
+  mic1PlcSignal = VOLUME_PLC_IDLE;
+  mic2PlcSignal = VOLUME_PLC_IDLE;
 
 
   RelaySPKR2(JACK);
@@ -701,21 +701,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		// Read volume control signal only if we don't choose potentiometers
 		if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) != GPIO_PIN_RESET)
 		{
-			miniJackPlcSignal = JACK_VOLUME_PLC_ACTIVE;
+			miniJackPlcSignal = VOLUME_PLC_ACTIVE;
 		}
 	}
 	if (GPIO_Pin == MIC1_VOL_PLC_Pin)
 	{
 		if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) != GPIO_PIN_RESET)
 		{
-			mic1PlcSignal = MIC1_VOLUME_PLC_ACTIVE;
+			mic1PlcSignal = VOLUME_PLC_ACTIVE;
 		}
 	}
 	if (GPIO_Pin == MIC2_VOL_PLC_Pin)
 	{
 		if (HAL_GPIO_ReadPin(VOL_CTRL_SELECT_GPIO_Port, VOL_CTRL_SELECT_Pin) != GPIO_PIN_RESET)
 		{
-			mic2PlcSignal = MIC2_VOLUME_PLC_ACTIVE;
+			mic2PlcSignal = VOLUME_PLC_ACTIVE;
 		}
 	}
 	if (GPIO_Pin == WAV_START_Pin)

@@ -46,12 +46,12 @@
 /* USER CODE BEGIN PV */
 extern WavFileSelect wavFileSelect;
 extern WavPlayerState wavPlayerState;
-extern MiniJackPlcSignal miniJackPlcSignal;
-extern Mic1PlcSignal mic1PlcSignal;
-extern Mic2PlcSignal mic2PlcSignal;
-extern MiniJackVolume miniJackVolume;
-extern Mic1Volume mic1Volume;
-extern Mic2Volume mic2Volume;
+extern VolumeControlPlcSignal miniJackPlcSignal;
+extern VolumeControlPlcSignal mic1PlcSignal;
+extern VolumeControlPlcSignal mic2PlcSignal;
+extern VolumeControlState miniJackVolumeState;
+extern VolumeControlState mic1VolumeState;
+extern VolumeControlState mic2VolumeState;
 extern Mic1State mic1State;
 
 extern uint8_t miniJackVolumeActual;
@@ -111,7 +111,7 @@ void Mic1_Handler(void)
 
 void VolumeControl_Handler(void)
 {
-	if (miniJackPlcSignal == JACK_VOLUME_PLC_ACTIVE)
+	if (miniJackPlcSignal == VOLUME_PLC_ACTIVE)
 	{
 		miniJackVolumeTimer++;
 		// If signal is ended - check duration and change volume
@@ -123,31 +123,31 @@ void VolumeControl_Handler(void)
 			// Volume MAX if signal > 1500 ms
 			if (miniJackVolumeTimer <= 5)
 			{
-				miniJackVolume = JACK_VOLUME_DOWN;
+				miniJackVolumeState = VOLUME_DOWN;
 			}
 			else
 			{
 				if (miniJackVolumeTimer <= 10)
 				{
-					miniJackVolume = JACK_VOLUME_UP;
+					miniJackVolumeState = VOLUME_UP;
 				}
 				else
 				{
 					if (miniJackVolumeTimer <= 15)
 					{
-						miniJackVolume = JACK_VOLUME_MIN;
+						miniJackVolumeState = VOLUME_MIN;
 					}
 					else
 					{
-						miniJackVolume = JACK_VOLUME_MAX;
+						miniJackVolumeState = VOLUME_MAX;
 					}
 				}
 			}
 			miniJackVolumeTimer = 0;
-			miniJackPlcSignal = JACK_VOLUME_PLC_IDLE;
+			miniJackPlcSignal = VOLUME_PLC_IDLE;
 		}
 	}
-	if (mic1PlcSignal == MIC1_VOLUME_PLC_ACTIVE)
+	if (mic1PlcSignal == VOLUME_PLC_ACTIVE)
 	{
 		mic1VolumeTimer++;
 		// If signal is ended - check duration and change volume
@@ -159,31 +159,31 @@ void VolumeControl_Handler(void)
 			// Volume MAX if 2000 ms > signal > 1500 ms
 			if (mic1VolumeTimer <= 5)
 			{
-				mic1Volume = MIC1_VOLUME_DOWN;
+				mic1VolumeState = VOLUME_DOWN;
 			}
 			else
 			{
 				if (mic1VolumeTimer <= 10)
 				{
-					mic1Volume = MIC1_VOLUME_UP;
+					mic1VolumeState = VOLUME_UP;
 				}
 				else
 				{
 					if (mic1VolumeTimer <= 15)
 					{
-						mic1Volume = MIC1_VOLUME_MIN;
+						mic1VolumeState = VOLUME_MIN;
 					}
 					else
 					{
-						mic1Volume = MIC1_VOLUME_MAX;
+						mic1VolumeState = VOLUME_MAX;
 					}
 				}
 			}
 			mic1VolumeTimer = 0;
-			mic1PlcSignal = MIC1_VOLUME_PLC_IDLE;
+			mic1PlcSignal = VOLUME_PLC_IDLE;
 		}
 	}
-	if (mic2PlcSignal == MIC2_VOLUME_PLC_ACTIVE)
+	if (mic2PlcSignal == VOLUME_PLC_ACTIVE)
 	{
 		mic2VolumeTimer++;
 		// If signal is ended - check duration and change volume
@@ -195,28 +195,28 @@ void VolumeControl_Handler(void)
 			// Volume MAX if 2000 ms > signal > 1500 ms
 			if (mic2VolumeTimer <= 5)
 			{
-				mic2Volume = MIC2_VOLUME_DOWN;
+				mic2VolumeState = VOLUME_DOWN;
 			}
 			else
 			{
 				if (mic2VolumeTimer <= 10)
 				{
-					mic2Volume = MIC2_VOLUME_UP;
+					mic2VolumeState = VOLUME_UP;
 				}
 				else
 				{
 					if (mic2VolumeTimer <= 15)
 					{
-						mic2Volume = MIC2_VOLUME_MIN;
+						mic2VolumeState = VOLUME_MIN;
 					}
 					else
 					{
-						mic2Volume = MIC2_VOLUME_MAX;
+						mic2VolumeState = VOLUME_MAX;
 					}
 				}
 			}
 			mic2VolumeTimer = 0;
-			mic2PlcSignal = MIC2_VOLUME_PLC_IDLE;
+			mic2PlcSignal = VOLUME_PLC_IDLE;
 		}
 	}
 }
