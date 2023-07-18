@@ -28,6 +28,7 @@
 #include "volumeControl.h"
 #include "audioRelays.h"
 #include "wavPlayer.h"
+#include "statusInfo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +63,7 @@ VolumeControlPlcSignal mic1PlcSignal;
 VolumeControlPlcSignal mic2PlcSignal;
 Mic1State mic1State;
 
+extern SDcardStatus sdCardStatus;
 extern WavPlayerState wavPlayerState;
 extern WavFileSelect wavFileSelect;
 extern VolumeControlState miniJackVolumeState;
@@ -136,15 +138,15 @@ int main(void)
   mic1PlcSignal = VOLUME_PLC_IDLE;
   mic2PlcSignal = VOLUME_PLC_IDLE;
 
+  sdCardStatus = NO_SD;
 
   RelaySPKR2(JACK);
   RelaySPKR1(MIC2);
 
   //HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin, GPIO_PIN_SET);
   //DACConfigureI2SFormat(&hspi3);
-  SDMount();
-  mic1State = MIC1_OFF;
   wavPlayerState = WAV_STATE_IDLE;
+  mic1State = MIC1_OFF;
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
   HAL_ADC_Start(&hadc3);
@@ -228,6 +230,26 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // if card isn't mounted and card is detected - mount it
+	  if (sdCardStatus != OK && HAL_GPIO_ReadPin(SD_CD_GPIO_Port, SD_CD_Pin) == GPIO_PIN_RESET)
+	  {
+		  if (SDMount())
+		  {
+			  sdCardStatus = OK;
+			  wavPlayerState = WAV_STATE_IDLE;
+		  }
+		  else
+		  {
+			  sdCardStatus = ERROR_SD;
+		  }
+	  }
+	  // unmount card if disconnected
+	  if (sdCardStatus != NO_SD && HAL_GPIO_ReadPin(SD_CD_GPIO_Port, SD_CD_Pin) == GPIO_PIN_SET)
+	  {
+		  SDUnmount();
+		  sdCardStatus = NO_SD;
+		  wavPlayerState = WAV_STATE_IDLE;
+	  }
 	  WAVPlayerProcess(&hi2s2);
 	  MiniJackVolumeProcess();
 	  Mic1VolumeProcess();
@@ -579,7 +601,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin|GPIO_PIN_4, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, JACK_VOL_INFO_Pin|MIC1_VOL_INFO_Pin|MIC2_VOL_INFO_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, JACK_VOL_INFO_Pin|MIC1_VOL_INFO_Pin|MIC2_VOL_INFO_Pin|STATUS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, SD_LED_Pin|DAC_LED_Pin|MIC1_VOL_CS_Pin|MIC2_VOL_CS_Pin
@@ -613,6 +635,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SD_CD_Pin */
+  GPIO_InitStruct.Pin = SD_CD_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(SD_CD_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : SD_LED_Pin DAC_LED_Pin */
   GPIO_InitStruct.Pin = SD_LED_Pin|DAC_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -642,11 +670,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SPI3_CS4_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MIC1_SELECT_Pin WAV_ALARM_Pin WAV_FINISH_Pin WAV_START_Pin */
-  GPIO_InitStruct.Pin = MIC1_SELECT_Pin|WAV_ALARM_Pin|WAV_FINISH_Pin|WAV_START_Pin;
+  /*Configure GPIO pins : MIC1_SELECT_Pin WAV_ALARM_Pin WAV_START_Pin */
+  GPIO_InitStruct.Pin = MIC1_SELECT_Pin|WAV_ALARM_Pin|WAV_START_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : STATUS_Pin */
+  GPIO_InitStruct.Pin = STATUS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(STATUS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : VOL_CTRL_SELECT_Pin */
   GPIO_InitStruct.Pin = VOL_CTRL_SELECT_Pin;
@@ -721,11 +756,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if (GPIO_Pin == WAV_START_Pin)
 	{
 		wavFileSelect = WAV_FILE_START;
-		wavPlayerState = WAV_STATE_START;
-	}
-	if (GPIO_Pin == WAV_FINISH_Pin)
-	{
-		wavFileSelect = WAV_FILE_FINISH;
 		wavPlayerState = WAV_STATE_START;
 	}
 	if (GPIO_Pin == WAV_ALARM_Pin)

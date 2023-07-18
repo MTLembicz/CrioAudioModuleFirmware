@@ -65,6 +65,8 @@ void Error_Handler(void);
 #define MIC1_VOL_INFO_GPIO_Port GPIOA
 #define MIC2_VOL_INFO_Pin GPIO_PIN_3
 #define MIC2_VOL_INFO_GPIO_Port GPIOA
+#define SD_CD_Pin GPIO_PIN_4
+#define SD_CD_GPIO_Port GPIOC
 #define SD_LED_Pin GPIO_PIN_5
 #define SD_LED_GPIO_Port GPIOC
 #define JACK_VOL_PLC_Pin GPIO_PIN_0
@@ -88,12 +90,11 @@ void Error_Handler(void);
 #define WAV_ALARM_Pin GPIO_PIN_9
 #define WAV_ALARM_GPIO_Port GPIOA
 #define WAV_ALARM_EXTI_IRQn EXTI9_5_IRQn
-#define WAV_FINISH_Pin GPIO_PIN_10
-#define WAV_FINISH_GPIO_Port GPIOA
-#define WAV_FINISH_EXTI_IRQn EXTI15_10_IRQn
-#define WAV_START_Pin GPIO_PIN_11
+#define WAV_START_Pin GPIO_PIN_10
 #define WAV_START_GPIO_Port GPIOA
 #define WAV_START_EXTI_IRQn EXTI15_10_IRQn
+#define STATUS_Pin GPIO_PIN_11
+#define STATUS_GPIO_Port GPIOA
 #define VOL_CTRL_SELECT_Pin GPIO_PIN_12
 #define VOL_CTRL_SELECT_GPIO_Port GPIOA
 #define MIC1_VOL_CS_Pin GPIO_PIN_10

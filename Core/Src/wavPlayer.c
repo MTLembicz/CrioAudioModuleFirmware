@@ -11,9 +11,10 @@
 #include <math.h>
 #include "audioRelays.h"
 #include "volumeControl.h"
+#include "statusInfo.h"
 
 FATFS fatFs;				// file system
-FIL wavFile, logFile;		// files
+FIL wavFile, logFile, configFile;		// files
 FRESULT fresult;			// to store the result
 
 UINT br, bw;
@@ -25,7 +26,6 @@ uint32_t total, free_space;
 
 UINT* nullptr = NULL;
 
-uint8_t ledCounter = 0;
 uint8_t dacRegisterAddress = 0;
 uint8_t dacRegisterData = 0;
 uint8_t bufferState = 0;
@@ -40,6 +40,7 @@ WavFileSelect wavFileSelect;
 extern SPI_HandleTypeDef hspi3;
 extern Mic1State mic1State;
 extern uint8_t miniJackVolumeActual;
+extern SDcardStatus sdCardStatus;
 
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 {
@@ -91,19 +92,35 @@ bool SDMount(void)
   /* Mount SD Card */
   if (f_mount(&fatFs, "", 0) == FR_OK)
   {
-	  //SD card mounted successfully
-	  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_SET);
-	  wavPlayerState = WAV_STATE_IDLE;
-	  return true;
+	  // SD card mounted successfully
+	  // Check for config file
+	  if (f_open(&configFile, "config.txt", FA_READ) == FR_OK)
+	  {
+		  f_close(&configFile);
+		  return true;
+	  }
+	  else
+	  {
+		  return false;
+	  }
   }
   else
   {
-	  //SD card mount failed
-	  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_RESET);
+	  // SD card mount failed
 	  return false;
   }
+}
+
+bool SDUnmount(void)
+{
+	if (f_mount(0, "", 0) == FR_OK)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool WAVPlayerFileSelect(const char* filePath)
@@ -126,8 +143,6 @@ bool WAVPlayerFileSelect(const char* filePath)
 	/* Open WAV file to read */
 	if (f_open(&wavFile, filePath, FA_READ) != FR_OK)
 	{
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_RESET);
 		wavPlayerState = WAV_STATE_ERROR;
 		return false;
 	}
@@ -158,8 +173,6 @@ bool WAVPlayerFileSelect(const char* filePath)
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_RESET);
 		wavPlayerState = WAV_STATE_ERROR;
 		return false;
 	}
@@ -198,7 +211,7 @@ void WAVPlayerPlay(I2S_HandleTypeDef* i2s)
 		RelaySPKR1(EXTERNAL_DAC);
 		RelaySPKR2(EXTERNAL_DAC);
 		HAL_I2S_Transmit_DMA(i2s, (uint16_t *)&audioBuffer, AUDIO_BUFFER_SIZE);
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
+		//HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
 	}
 	else
 	{
@@ -220,14 +233,18 @@ void WAVPlayerProcess(I2S_HandleTypeDef* i2s)
 {
 	if (wavPlayerState == WAV_STATE_START)
 	{
+		/*
+		// maybe needed after error and card change
+		wavFileBytesReaded = 0;
+		wavFileSize = 0;
+		memset(audioBuffer, 0, sizeof audioBuffer);
+		*/
 		switch (wavFileSelect)
 		{
 		case WAV_FILE_START:
 			WAVPlayerFileSelect("001_start_22khz.wav");
 			break;
-		case WAV_FILE_FINISH:
-			WAVPlayerFileSelect("002_finish_22khz.wav");
-			break;
+
 		case WAV_FILE_ALARM:
 			WAVPlayerFileSelect("003_alarm_22khz.wav");
 			break;
@@ -264,14 +281,9 @@ void WAVPlayerProcess(I2S_HandleTypeDef* i2s)
 		}
 	}
 
-	if (wavPlayerState == WAV_STATE_ERROR)
-	{
-		SDMount();
-	}
-
 	if (wavPlayerState == WAV_STATE_IDLE && mic1State == MIC1_OFF)
 	{
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
 		RelaySPKR1(MIC2);
 		// Turn on JACK or NO_RELAY if mini-jack is muted
 		if (miniJackVolumeActual != 63)
@@ -289,7 +301,7 @@ bool WAVPlayerStopAndCloseFile(void)
 {
 	if(f_close(&wavFile) == FR_OK)
 	{
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_SET);
 		if (wavFileSelect == WAV_FILE_ALARM)
 		{
 			wavPlayerState = WAV_STATE_START;
@@ -302,8 +314,6 @@ bool WAVPlayerStopAndCloseFile(void)
 	}
 	else
 	{
-		HAL_GPIO_WritePin(GPIOA, ERROR_LED_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOC, DAC_LED_Pin, GPIO_PIN_RESET);
 		wavPlayerState = WAV_STATE_ERROR;
 		RelaySPKR1(MIC2);
 		// Turn on JACK or NO_RELAY if mini-jack is muted

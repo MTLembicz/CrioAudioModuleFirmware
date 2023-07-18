@@ -20,7 +20,6 @@ typedef enum {
 
 typedef enum {
   WAV_FILE_START = 0,
-  WAV_FILE_FINISH,
   WAV_FILE_ALARM,
 }WavFileSelect;
 
@@ -44,6 +43,7 @@ struct WavFilesInfo
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi);
 void DACSetVolume(uint16_t volume);
 bool SDMount(void);
+bool SDUnmount(void);
 bool WAVPlayerFileSelect(const char* filePath);
 void WAVPlayerPlay(I2S_HandleTypeDef* i2s);
 void WAVPlayerBufferState(uint8_t bs);

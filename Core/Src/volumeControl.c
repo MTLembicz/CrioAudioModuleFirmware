@@ -420,7 +420,7 @@ void Mic2VolumeProcess(void)
 			break;
 
 		case VOLUME_DOWN:
-			if (mic2VolumeActual < 62)
+			if (mic2VolumeActual < 63)
 			{
 				HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 				mic2VolumeActual++;

@@ -25,6 +25,7 @@
 #include "volumeControl.h"
 #include "audioRelays.h"
 #include "wavPlayer.h"
+#include "statusInfo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,6 +70,8 @@ extern uint8_t mic2VolumeActual;
 volatile uint8_t fatFsCounter = 0;
 volatile uint8_t mic1AndAlarmCounter = 0;
 volatile uint8_t volumeControlCounter = 0;
+volatile uint8_t statusLedCounter = 0;
+volatile uint8_t statusPinCounter = 0;
 volatile uint8_t Timer1, Timer2;
 volatile uint8_t miniJackVolumeTimer = 0;
 volatile uint8_t mic1VolumeTimer = 0;
@@ -83,7 +86,7 @@ void PlayAlarm_Handler(void)
 	{
 		// Change file and state to idle to stop playing alarm
 		wavFileSelect = WAV_FILE_START;
-		wavPlayerState = WAV_STATE_IDLE;
+		wavPlayerState = (wavPlayerState == WAV_STATE_ERROR) ? WAV_STATE_ERROR : WAV_STATE_IDLE;
 	}
 }
 
@@ -368,6 +371,8 @@ void SysTick_Handler(void)
 	miniJackVolumeInfoTimer++;
 	mic1VolumeInfoTimer++;
 	mic2VolumeInfoTimer++;
+	statusLedCounter++;
+	statusPinCounter++;
 
 	if (fatFsCounter >= 10)
 	{
@@ -384,6 +389,16 @@ void SysTick_Handler(void)
 	{
 		volumeControlCounter = 0;
 		VolumeControl_Handler();
+	}
+	if (statusLedCounter >= 100)
+	{
+		statusLedCounter = 0;
+		StatusLedProcess();
+	}
+	if (statusPinCounter >= 10)
+	{
+		statusPinCounter = 0;
+		StatusPinProcess();
 	}
 
 	uint16_t miniJackVolumePulse = (miniJackVolumeActual == 0) ? 20 : miniJackVolumeActual * 20;
@@ -521,7 +536,6 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
   /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(WAV_FINISH_Pin);
   HAL_GPIO_EXTI_IRQHandler(WAV_START_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
