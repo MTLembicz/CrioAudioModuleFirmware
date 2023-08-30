@@ -7,6 +7,7 @@
 
 #include "volumeControl.h"
 #include "audioRelays.h"
+#include "sdConfigFile.h"
 
 VolumeControlState miniJackVolumeState;
 VolumeControlState mic1VolumeState;
@@ -92,6 +93,7 @@ void MiniJackVolumeProcess(void)
 			{
 				miniJackVolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_DOWN:
@@ -115,6 +117,7 @@ void MiniJackVolumeProcess(void)
 				miniJackVolumeState = VOLUME_IDLE;
 				RelaySPKR2(NO_RELAY);
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MIN:
@@ -138,6 +141,7 @@ void MiniJackVolumeProcess(void)
 			{
 				miniJackVolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MAX:
@@ -161,6 +165,7 @@ void MiniJackVolumeProcess(void)
 			{
 				miniJackVolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_INIT:
@@ -179,6 +184,7 @@ void MiniJackVolumeProcess(void)
 			while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
 			HAL_GPIO_WritePin(JACK_VOL_CS_GPIO_Port, JACK_VOL_CS_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_IDLE:
@@ -256,6 +262,7 @@ void Mic1VolumeProcess(void)
 			{
 				mic1VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_DOWN:
@@ -278,6 +285,7 @@ void Mic1VolumeProcess(void)
 			{
 				mic1VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MIN:
@@ -300,6 +308,7 @@ void Mic1VolumeProcess(void)
 			{
 				mic1VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MAX:
@@ -322,6 +331,7 @@ void Mic1VolumeProcess(void)
 			{
 				mic1VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_INIT:
@@ -340,6 +350,7 @@ void Mic1VolumeProcess(void)
 			while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
 			HAL_GPIO_WritePin(MIC1_VOL_CS_GPIO_Port, MIC1_VOL_CS_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_IDLE:
@@ -417,6 +428,7 @@ void Mic2VolumeProcess(void)
 			{
 				mic2VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_DOWN:
@@ -439,6 +451,7 @@ void Mic2VolumeProcess(void)
 			{
 				mic2VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MIN:
@@ -461,6 +474,7 @@ void Mic2VolumeProcess(void)
 			{
 				mic2VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_MAX:
@@ -483,6 +497,7 @@ void Mic2VolumeProcess(void)
 			{
 				mic2VolumeState = VOLUME_IDLE;
 			}
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_INIT:
@@ -501,6 +516,7 @@ void Mic2VolumeProcess(void)
 			while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
 			HAL_GPIO_WritePin(MIC2_VOL_CS_GPIO_Port, MIC2_VOL_CS_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_SET);
+			sdConfigFile_saveFullConfig();
 			break;
 
 		case VOLUME_IDLE:

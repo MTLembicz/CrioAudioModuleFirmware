@@ -237,6 +237,7 @@ int main(void)
 		  {
 			  sdCardStatus = OK;
 			  wavPlayerState = WAV_STATE_IDLE;
+			  sdConfigFile_readVolume();
 		  }
 		  else
 		  {

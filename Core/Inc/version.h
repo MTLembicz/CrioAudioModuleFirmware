@@ -8,6 +8,6 @@
 #ifndef INC_VERSION_H_
 #define INC_VERSION_H_
 
-#define MAIN_VERSION	"1.1.0"
+#define MAIN_VERSION	"1.1.1"
 
 #endif /* INC_VERSION_H_ */

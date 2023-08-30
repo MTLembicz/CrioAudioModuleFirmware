@@ -12,10 +12,11 @@
 #include "audioRelays.h"
 #include "volumeControl.h"
 #include "statusInfo.h"
+#include "sdConfigFile.h"
 
-FATFS fatFs;				// file system
+FATFS fatFs;							// file system
 FIL wavFile, logFile, configFile;		// files
-FRESULT fresult;			// to store the result
+FRESULT fresult;						// to store the result
 
 UINT br, bw;
 
@@ -94,7 +95,8 @@ bool SDMount(void)
   {
 	  // SD card mounted successfully
 	  // Check for config file
-	  if (f_open(&configFile, "config.txt", FA_READ) == FR_OK)
+
+	  if (f_open(&configFile, "config.txt", FA_OPEN_ALWAYS) == FR_OK)
 	  {
 		  f_close(&configFile);
 		  return true;
@@ -103,6 +105,8 @@ bool SDMount(void)
 	  {
 		  return false;
 	  }
+
+	  //return sdConfigFile_saveFirmwareVersion();
   }
   else
   {
