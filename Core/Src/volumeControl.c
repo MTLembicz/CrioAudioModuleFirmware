@@ -42,7 +42,7 @@ void MiniJackVolumeProcess(void)
 
 		miniJackAdcVolume = (uint8_t)(miniJackAdcVolume / 65);
 		
-		if (miniJackAdcVolume != miniJackVolumeActual)
+		if (abs(miniJackAdcVolume - miniJackVolumeActual) > 1)
 		{
 			miniJackVolumeActual = miniJackAdcVolume;
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
@@ -212,7 +212,7 @@ void Mic1VolumeProcess(void)
 
 		mic1AdcVolume = (uint8_t)(mic1AdcVolume / 65);
 
-		if (mic1AdcVolume != mic1VolumeActual)
+		if (abs(mic1AdcVolume - mic1VolumeActual) > 1)
 		{
 			mic1VolumeActual = mic1AdcVolume;
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
@@ -378,7 +378,7 @@ void Mic2VolumeProcess(void)
 
 		mic2AdcVolume = (uint8_t)(mic2AdcVolume / 65);
 
-		if (mic2AdcVolume != mic2VolumeActual)
+		if (abs(mic2AdcVolume - mic2VolumeActual) > 1)
 		{
 			mic2VolumeActual = mic2AdcVolume;
 			HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);

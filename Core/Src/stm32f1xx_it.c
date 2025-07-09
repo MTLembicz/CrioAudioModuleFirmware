@@ -401,6 +401,7 @@ void SysTick_Handler(void)
 		StatusPinProcess();
 	}
 
+	//uint16_t miniJackVolumeModified = miniJackVolumeActual / 2;
 	uint16_t miniJackVolumePulse = (miniJackVolumeActual == 0) ? 20 : miniJackVolumeActual * 20;
 	if (miniJackVolumeInfoTimer >= 0)
 	{

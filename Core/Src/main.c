@@ -150,6 +150,7 @@ int main(void)
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
   HAL_ADC_Start(&hadc3);
+  //DACSetVolume();
   //WAVPlayerFileSelect("001_start_22khz.wav");
   //WAVPlayerFileSelect("test22.wav");
   //WAVPlayerPlay(&hi2s2);
