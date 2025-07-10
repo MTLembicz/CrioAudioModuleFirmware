@@ -143,87 +143,11 @@ int main(void)
   RelaySPKR2(JACK);
   RelaySPKR1(MIC2);
 
-  //HAL_GPIO_WritePin(GPIOB, SPKR1_DAC_RLY_Pin, GPIO_PIN_SET);
-  //DACConfigureI2SFormat(&hspi3);
   wavPlayerState = WAV_STATE_IDLE;
   mic1State = MIC1_OFF;
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
   HAL_ADC_Start(&hadc3);
-  //DACSetVolume();
-  //WAVPlayerFileSelect("001_start_22khz.wav");
-  //WAVPlayerFileSelect("test22.wav");
-  //WAVPlayerPlay(&hi2s2);
-  //HAL_Delay(1000);
-  //WAVPlayerFileSelect("002_finish_22khz.wav");
-  //WAVPlayerPlay(&hi2s2);
-  //HAL_Delay(1000);
-  //WAVPlayerFileSelect("003_alarm_22khz.wav");
-  //WAVPlayerPlay(&hi2s2);
-
-/*
-  // Mount SD Card
-  fresult = f_mount(&fatFs, "", 1);
-  if (fresult == FR_OK)
-  {
-	  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-	  HAL_Delay(100);
-	  // Open file to write / create file if it doesn't exist
-	  fresult = f_open(&file, "log.txt", FA_CREATE_ALWAYS | FA_WRITE);
-	  if (fresult == FR_OK)
-	  {
-		  HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
-		  // Writing text
-		  fresult = f_puts("microSD communication started\n", &file);
-		  // Close file
-		  fresult = f_close(&file);
-	  }
-	  else
-	  {
-		  if (fresult == FR_NOT_READY)
-		  {
-			  HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
-			  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-		  }
-	  }
-  }
-  else
-  {
-	  if (fresult == FR_INVALID_DRIVE)
-	  {
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-	  }
-	  if (fresult == FR_DISK_ERR)
-	  {
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-	  }
-	  if (fresult == FR_NOT_READY)
-	  {
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_SET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_SET);
-		  HAL_Delay(300);
-		  HAL_GPIO_WritePin(GPIOC, SD_LED_Pin, GPIO_PIN_RESET);
-		  HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
-	  }
-  }
-  */
 
   /* USER CODE END 2 */
 

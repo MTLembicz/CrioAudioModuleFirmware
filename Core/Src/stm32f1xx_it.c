@@ -401,8 +401,8 @@ void SysTick_Handler(void)
 		StatusPinProcess();
 	}
 
-	//uint16_t miniJackVolumeModified = miniJackVolumeActual / 2;
-	uint16_t miniJackVolumePulse = (miniJackVolumeActual == 0) ? 20 : miniJackVolumeActual * 20;
+	uint16_t miniJackVolumeModified = miniJackVolumeActual / 2;
+	uint16_t miniJackVolumePulse = (miniJackVolumeActual == 0) ? 20 : miniJackVolumeActual * 40;
 	if (miniJackVolumeInfoTimer >= 0)
 	{
 		HAL_GPIO_WritePin(JACK_VOL_INFO_GPIO_Port, JACK_VOL_INFO_Pin, GPIO_PIN_SET);

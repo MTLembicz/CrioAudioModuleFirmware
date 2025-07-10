@@ -27,8 +27,6 @@ uint32_t total, free_space;
 
 UINT* nullptr = NULL;
 
-uint8_t dacRegisterAddress = 0;
-uint8_t dacRegisterData = 0;
 uint8_t bufferState = 0;
 uint32_t wavFileBytesReaded = 0;
 uint32_t wavFileSize = 0;
@@ -41,8 +39,10 @@ WavFileSelect wavFileSelect;
 extern SPI_HandleTypeDef hspi3;
 extern Mic1State mic1State;
 extern uint8_t miniJackVolumeActual;
+extern uint8_t dacVolume;
 extern SDcardStatus sdCardStatus;
 
+// unused
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 {
 	uint8_t dacRegisterAddress = 0x14;
@@ -58,34 +58,38 @@ void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi)
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
 }
 
-// TODO - function doesn't work
-void DACSetVolume(uint16_t volume)
+// volume value should be 0 to 99
+// function called in WAVPlayerPlay
+void DACSetVolume()
 {
+	/*
+	 * PCM1870 register values:
+	 * 128 = Mute, 129 = -63 dB, 254 = -0.5 dB, 255 = no attenuation
+	 */
+	uint8_t volume = dacVolume * 127 / 100 + 128;
 	uint8_t dacRegisterAddress = 0x10;
-	uint8_t dacRegisterData = 0x0;
+	uint8_t dacRegisterData = volume;
 	uint8_t sendData[2] = {dacRegisterAddress, dacRegisterData};
 
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_RESET);
 	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
-	if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, HAL_MAX_DELAY) == HAL_OK)
-	{
-		HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
-	}
+	HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500);
+	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
-	//HAL_Delay(2);
+	HAL_Delay(10);
 
 	dacRegisterAddress = 0x11;
-	dacRegisterData = 0x0;
+	dacRegisterData = volume;
 	sendData[0] = dacRegisterAddress;
 	sendData[1] = dacRegisterData;
 
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_RESET);
 	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
-	if (HAL_SPI_Transmit(&hspi3, &sendData[0], 2, HAL_MAX_DELAY) == HAL_OK)
-	{
-		HAL_GPIO_WritePin(GPIOB, STATUS_LED_Pin, GPIO_PIN_RESET);
-	}
+	HAL_SPI_Transmit(&hspi3, &sendData[0], 2, 500);
+	while (HAL_SPI_GetState(&hspi3) != HAL_SPI_STATE_READY);
 	HAL_GPIO_WritePin(GPIOB, SPI3_CS4_Pin, GPIO_PIN_SET);
+	// wait to apply setting
+	HAL_Delay(10);
 }
 
 bool SDMount(void)
@@ -185,6 +189,7 @@ bool WAVPlayerFileSelect(const char* filePath)
 
 void WAVPlayerPlay(I2S_HandleTypeDef* i2s)
 {
+	DACSetVolume();
 	if (wavPlayerState != WAV_STATE_ERROR)
 	{
 		wavFileBytesReaded = 0;

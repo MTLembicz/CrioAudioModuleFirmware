@@ -39,9 +39,9 @@ void MiniJackVolumeProcess(void)
 		{
 			HAL_GPIO_WritePin(ERROR_LED_GPIO_Port, ERROR_LED_Pin, GPIO_PIN_RESET);
 		}
-
-		miniJackAdcVolume = (uint8_t)(miniJackAdcVolume / 65);
 		
+		miniJackAdcVolume = ConvertAdcValue(miniJackAdcVolume);
+
 		if (abs(miniJackAdcVolume - miniJackVolumeActual) > 1)
 		{
 			miniJackVolumeActual = miniJackAdcVolume;
@@ -62,7 +62,7 @@ void MiniJackVolumeProcess(void)
 	else
 	{
 		/*
-		LM1971 data register - attentuation:
+		LM1971 data register - attenuation:
 		0x00 - no attenuation,
 		0x03 (dec 3) - 3dB,
 		0x13 (dec 19) - 19dB,
@@ -523,5 +523,27 @@ void Mic2VolumeProcess(void)
 			break;
 		}
 	}
+}
+
+uint8_t ConvertAdcValue(uint32_t adcValue)
+{
+	/*
+	 * 12-bit ADC = 4095 max value
+	 * Min voltage = 0,09 V = 0,09 * 4095 = 369
+	 * Max voltage = 2,88 V = 3,3 V / 1,146 (1.24 is based on experiments)
+	 * 4095 / 63 attenuation levels = 65
+	 */
+	if (adcValue < 369)
+	{
+		adcValue = 0;
+	}
+
+	uint8_t convertedValue = (uint8_t)(adcValue * 1.24 / 65);
+
+	if (convertedValue > 63)
+	{
+		convertedValue = 63;
+	}
+	return convertedValue;
 }
 

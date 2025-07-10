@@ -12,6 +12,7 @@
 char miniJackVolumeString[] = "Mini-jack volume";
 char mic1VolumeString[] = "Mic1 volume";
 char mic2VolumeString[] = "Mic2 volume";
+char dacVolumeString[] = "Info signals volume";
 char separator = ':';
 
 extern FATFS fatFs;			// file system from wavPlayer
@@ -21,6 +22,7 @@ extern FRESULT fresult;		// to store the result
 extern uint8_t miniJackVolumeActual;
 extern uint8_t mic1VolumeActual;
 extern uint8_t mic2VolumeActual;
+uint8_t dacVolume = 75;
 
 bool sdConfigFile_saveFirmwareVersion()
 {
@@ -114,6 +116,28 @@ bool sdConfigFile_readVolume()
 					mic2VolumeActual = volumeChar - '0';
 				}
 			}
+
+			/* Look for DAC volume */
+			if (strstr(line, dacVolumeString))
+			{
+				char * p = strchr(line, separator);
+				// Look for terminating character
+				// If 3 positions above ':' is not '\0' - volume has 2 digits
+				if (*(p + 3) != '\0')
+				{
+					char volumeString[3];
+					strncpy(volumeString, p + 2, 2);
+					dacVolume = atoi(volumeString);
+				}
+				// If there is '\0' - volume has 1 digit
+				else
+				{
+					char * p = strchr(line, separator);
+					char volumeChar = *(p + 2);
+					// convert ASCI character to int
+					dacVolume = volumeChar - '0';
+				}
+			}
 		}
 		f_close(&configFile);
 		return true;
@@ -147,6 +171,10 @@ bool sdConfigFile_saveFullConfig()
 
 		// write mic2 volume
 		volumeStringLength = sprintf(volumeString, "%s%c %d\n", mic2VolumeString, separator, mic2VolumeActual);
+		f_write(&configFile, volumeString, volumeStringLength, &bw);
+
+		// write dac volume
+		volumeStringLength = sprintf(volumeString, "%s%c %d\n", dacVolumeString, separator, dacVolume);
 		f_write(&configFile, volumeString, volumeStringLength, &bw);
 
 		if (f_close(&configFile) == FR_OK)

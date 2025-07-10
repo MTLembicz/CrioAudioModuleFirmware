@@ -41,7 +41,7 @@ struct WavFilesInfo
 };
 
 void DACConfigureI2SFormat(SPI_HandleTypeDef *hspi);
-void DACSetVolume(uint16_t volume);
+void DACSetVolume();
 bool SDMount(void);
 bool SDUnmount(void);
 bool WAVPlayerFileSelect(const char* filePath);

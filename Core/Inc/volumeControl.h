@@ -28,5 +28,6 @@ typedef enum {
 void MiniJackVolumeProcess(void);
 void Mic1VolumeProcess(void);
 void Mic2VolumeProcess(void);
+uint8_t ConvertAdcValue(uint32_t adcValue);
 
 #endif /* INC_VOLUMECONTROL_H_ */
