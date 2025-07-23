@@ -529,21 +529,24 @@ uint8_t ConvertAdcValue(uint32_t adcValue)
 {
 	/*
 	 * 12-bit ADC = 4095 max value
-	 * Min voltage = 0,09 V = 0,09 * 4095 = 369
+	 * Min voltage = 0,09 V = 0,09 * (4095 / 3,3 V) = 111
 	 * Max voltage = 2,88 V = 3,3 V / 1,146 (1.24 is based on experiments)
-	 * 4095 / 63 attenuation levels = 65
+	 * Max voltave V2 = 2,88 V = 3574 value
+	 * 3574 / (63+2+1) attenuation levels = 54,15
 	 */
-	if (adcValue < 369)
+
+	int16_t convertedValue = (adcValue / 51) - 2;
+
+	if (convertedValue < 0)
 	{
-		adcValue = 0;
+		convertedValue = 0;
 	}
 
-	uint8_t convertedValue = (uint8_t)(adcValue * 1.24 / 65);
-
-	if (convertedValue > 63)
+	if (convertedValue > 62)
 	{
 		convertedValue = 63;
 	}
-	return convertedValue;
+
+	return (uint8_t)convertedValue;
 }
 

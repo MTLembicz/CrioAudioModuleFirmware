@@ -1,0 +1,83 @@
+[33mcommit 3580391716a95d1c3b59d4382fd50d3747b4c742[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Mateusz <mtlembicz@gmail.com>
+Date:   Thu Jul 10 14:55:10 2025 +0200
+
+    Add DAC volume regulation. Work on potentiometers - more stable and wide volume range.
+
+[33mcommit 2949adb91c3c7ba352c8b3c09f6d32eee9abdf9f[m
+Author: Mateusz <mtlembicz@gmail.com>
+Date:   Wed Jul 9 16:54:36 2025 +0200
+
+    Work on potentiometers - more stable work.
+
+[33mcommit 57fd084cd3207770152564bbbb14be8054057f14[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Wed Aug 30 15:08:18 2023 +0200
+
+    Save volume levels in config file on SD. Read it on startup..
+
+[33mcommit 56f40e48853e4a7fd41b6c85a54358cb90829742[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Tue Jul 18 20:58:08 2023 +0200
+
+    Add status LED and PIN signals
+
+[33mcommit 285b9ab8c532b27f2a2678135b9dd75de58f371b[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon Jul 3 19:55:42 2023 +0200
+
+    Cleanup in volumeControl
+
+[33mcommit 0fd1a448c8d941116f4029c5e3b35059cd5e91e8[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon Jul 3 19:38:31 2023 +0200
+
+    Add volume regulation options - MAX and MIN
+
+[33mcommit 2b3887ed734188f423a95c9fb38a326d2e5cdeba[m[33m ([m[1;33mtag: [m[1;33mv1.0.0[m[33m)[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon Jul 3 17:10:17 2023 +0200
+
+    Version bump
+
+[33mcommit 3537a91853c3debf42fddc10a027e2792ec66759[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon Jul 3 16:50:08 2023 +0200
+
+    Add potentiometer volume regulation option
+
+[33mcommit 8dbe0169603e07f962fb7523ca08dba287efbe1c[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon May 8 13:45:32 2023 +0200
+
+    Add volume level info outputs and version.h. Add no active relay case in audioRelays
+
+[33mcommit c0d23d37d2b1b58cbda020293a67d22c99ff06cf[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Tue May 2 00:08:43 2023 +0200
+
+    Add audioRelays and mini-jack volumeControl
+
+[33mcommit d495a50c08363da261c6977cc7d17f7e6a4876df[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Mon May 1 20:16:41 2023 +0200
+
+    SPI3 configuration
+
+[33mcommit fc13bd9e82b1db35a2f2eb1b0acd9d1b051a9cfa[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Sun Apr 30 20:37:35 2023 +0200
+
+    I2S configuration, playing status wav files
+
+[33mcommit 70f3ed1453e57a8c4f9881b2359bc1c9f5c09bc4[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Tue Apr 25 19:27:30 2023 +0200
+
+    GPIO and FatFS configuration
+
+[33mcommit 1461a5b4fddfdde7397063e46c9917c896291b57[m
+Author: Teo314 <mtlembicz@gmail.com>
+Date:   Tue Apr 25 09:58:36 2023 +0200
+
+    Empty project - STM32F103RCT6
